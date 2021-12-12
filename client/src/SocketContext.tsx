@@ -11,33 +11,30 @@ import Peer from "simple-peer";
 import { useLocation } from "react-router";
 import { useWatcherContext } from "./WatcherContext";
 import { VideoSizeKey, VIDEO_SIZE } from "./constants/params";
-import { isMobile } from "./utils";
+import { isDev, isMobile } from "./utils";
 
-// const socketOptions =
-//   process.env.NODE_ENV === "production"
-//     ? window.location
-//     : "http://www.localhost:4000";
-
-const socket = io();
+const socket = isDev()
+  ? io("http://www.localhost:4000", { reconnectionAttempts: 0 })
+  : io();
 
 type SocketContextType = {
   call: CallType;
   callAccepted: boolean;
   myVideo: React.RefObject<HTMLVideoElement>;
   stream: MediaStream | null;
-  name: string;
-  setName: (name: string) => void;
   callEnded: boolean;
   me: string;
   callUser: (id: string) => void;
   leaveCall: () => void;
   answerCall: () => void;
+  hasConnected: boolean;
+  isConnecting: boolean;
+  isStreaming: boolean;
+  isReceivingStream: boolean;
 };
 
-const EMPTY_CALL: CallType = {
-  from: "",
-  name: "",
-  signal: null,
+export const EMPTY_CALL: CallType = {
+  from: "no_one",
   isReceivingCall: false,
 };
 
@@ -46,13 +43,15 @@ export const defaultContextValue: SocketContextType = {
   callAccepted: false,
   myVideo: React.createRef<HTMLVideoElement>(),
   stream: null,
-  name: "Jonny",
-  setName: () => {},
   callEnded: false,
   me: "",
   callUser: () => {},
   leaveCall: () => {},
   answerCall: () => {},
+  hasConnected: false,
+  isConnecting: false,
+  isStreaming: false,
+  isReceivingStream: false,
 };
 
 export const SocketContext = createContext(defaultContextValue);
@@ -61,20 +60,21 @@ SocketContext.displayName = "Workflows.SocketContext";
 
 type CallType = {
   from: string;
-  name: string;
-  signal: any;
   isReceivingCall: boolean;
 };
 
 export const SocketProvider: React.FC = ({ children }): ReactElement => {
   const [stream, setSteam] = useState<MediaStream | null>(null);
-  const [me, setMe] = useState("");
+  const [me, setMe] = useState("unavailable");
   const [call, setCall] = useState(EMPTY_CALL);
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
-  const [name, setName] = useState("");
   const [targetFPS] = useState(5);
   const [sizeOption] = useState<VideoSizeKey>("640 X 480");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [callerId, setCallerId] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isReceivingStream, setIsReceivingStream] = useState(false);
 
   const myVideo = useRef<HTMLVideoElement>(null);
   const { setupWatcher, videoRef } = useWatcherContext();
@@ -86,15 +86,37 @@ export const SocketProvider: React.FC = ({ children }): ReactElement => {
   useEffect(() => {
     socket.on("me", (id: string) => setMe(id));
 
-    socket.on("callUser", ({ from, name: callerName, signal }) => {
+    socket.on("callUser", ({ from }) => {
       setCall({
         from,
-        name: callerName,
         isReceivingCall: true,
-        signal,
       });
     });
   }, []);
+
+  useEffect(() => {
+    if (!!callerId) {
+      socket.on("requestStream", ({ from, signalData }) => {
+        if (from === callerId) {
+          const peer = new Peer({
+            initiator: false,
+            trickle: false,
+            stream: stream || undefined,
+          });
+
+          peer.on("signal", (data) => {
+            socket.emit("sendStream", { callerId, from: me, signalData: data });
+            setIsStreaming(true);
+          });
+
+          peer.signal(signalData);
+
+          connectionRef.current = peer;
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callerId]);
 
   useEffect(() => {
     if (!isSendPath) return;
@@ -120,65 +142,60 @@ export const SocketProvider: React.FC = ({ children }): ReactElement => {
       if (!myVideo.current) return;
       myVideo.current.srcObject = currentStream;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSendPath]);
 
   const answerCall = () => {
     setCallAccepted(true);
 
+    socket.emit("answerCall", call.from);
+    setCallerId(call.from);
+  };
+
+  const requestStream = (id: string) => {
     const peer = new Peer({
-      initiator: false,
+      initiator: true,
       trickle: false,
-      stream: stream || undefined,
     });
 
     peer.on("signal", (data) => {
-      socket.emit("answerCall", { signal: data, to: call.from });
+      socket.emit("requestStream", {
+        userToCall: id,
+        from: me,
+        signalData: data,
+      });
+    });
+
+    socket.on("streamSent", ({ from, signal }) => {
+      if (from === id) {
+        peer.signal(signal);
+      }
     });
 
     peer.on("stream", (currentStream) => {
       if (!videoRef.current) return;
-
+      setIsReceivingStream(true);
       setupWatcher(currentStream);
 
       videoRef.current.srcObject = currentStream;
     });
-
-    peer.signal(call.signal);
 
     connectionRef.current = peer;
   };
 
   const callUser = (id: string) => {
-    const peer = new Peer({
-      initiator: true,
-      trickle: false,
-      stream: stream || undefined,
-    });
+    setIsConnecting(true);
 
-    peer.on("signal", (data) => {
-      socket.emit("callUser", {
-        userToCall: id,
-        signalData: data,
-        from: me,
-        name,
-      });
-    });
-
-    peer.on("stream", (currentStream) => {
-      if (!videoRef.current) return;
-
-      setupWatcher(currentStream);
-
-      videoRef.current.srcObject = currentStream;
+    socket.emit("callUser", {
+      userToCall: id,
+      from: me,
     });
 
     socket.on("callAccepted", (signal) => {
       setCallAccepted(true);
-
-      peer.signal(signal);
+      setIsConnecting(false);
+      requestStream(id);
     });
-
-    connectionRef.current = peer;
   };
 
   const leaveCall = () => {
@@ -194,13 +211,15 @@ export const SocketProvider: React.FC = ({ children }): ReactElement => {
     callAccepted,
     myVideo,
     stream,
-    name,
-    setName,
     callEnded,
     me,
     callUser,
     leaveCall,
     answerCall,
+    hasConnected: callAccepted,
+    isConnecting,
+    isStreaming,
+    isReceivingStream,
   };
 
   return (

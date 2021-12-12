@@ -30,7 +30,6 @@ const useStyles = makeStyles((theme) => ({
     //   },
   },
   container: {
-    width: "600px",
     margin: "35px 0",
     padding: 0,
     //   [theme.breakpoints.down('xs')]: {
@@ -50,7 +49,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Options: React.FC<OptionsProps> = ({ children }) => {
-  const { me, callAccepted, name, setName, callEnded, leaveCall, callUser } =
+  const { me, callAccepted, callEnded, leaveCall, callUser } =
     useSocketContext();
   const [idToCall, setIdToCall] = useState("");
   const classes = useStyles();
@@ -64,12 +63,6 @@ const Options: React.FC<OptionsProps> = ({ children }) => {
               <Typography gutterBottom variant="h6">
                 Account Info
               </Typography>
-              <TextField
-                label="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                fullWidth
-              />
               <CopyToClipboard text={me}>
                 <Button
                   variant="contained"

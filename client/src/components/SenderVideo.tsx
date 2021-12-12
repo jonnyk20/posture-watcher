@@ -1,67 +1,39 @@
-import Grid from "@mui/material/Grid/Grid";
-import Paper from "@mui/material/Paper/Paper";
-import Typography from "@mui/material/Typography/Typography";
+import Card from "@mui/material/Card/Card";
+import Box from "@mui/material/Box/Box";
 import { SxProps } from "@mui/system/styleFunctionSx/styleFunctionSx";
-import { makeStyles } from "@mui/styles";
 import { Theme } from "@mui/material";
-import { useSocketContext } from "../SocketContext";
 
-import ReceiverOptions from "./ReceiverOptions";
-import Notifications from "./Notifications";
+import { useSocketContext } from "../SocketContext";
 
 type VideoPlayerProps = {};
 
-const useStyles = makeStyles((theme) => ({
-  video: {
-    width: "550px",
-    // [theme.down('xs')]: {
-    //   width: '300px',
-    // },
-  },
-  gridContainer: {
-    justifyContent: "center",
-    // [theme.breakpoints.down('xs')]: {
-    //   flexDirection: 'column',
-    // },
-  },
-  paper: {
-    padding: "10px",
-    border: "2px solid black",
-    margin: "10px",
-  },
-}));
-
 const SenderVideo: React.FC<VideoPlayerProps> = () => {
-  const sx: SxProps<Theme> = {};
-  const { name, myVideo, callEnded, stream, call, me } = useSocketContext();
-  const classes = useStyles();
+  const sx: SxProps<Theme> = {
+    m: 1,
+    p: 1,
+  };
+
+  const videoStyles: React.CSSProperties = {
+    width: "100%",
+  };
+
+  const { myVideo, stream } = useSocketContext();
 
   return (
-    <Grid container className={classes.gridContainer}>
+    <Card sx={sx}>
       {stream && (
-        <Paper className={classes.paper}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="h5" gutterBottom>
-              {name || "Name"}
-            </Typography>
-            <Typography variant="h5" gutterBottom>
-              {me || "ID"}
-            </Typography>
-            <video
-              playsInline
-              muted
-              ref={myVideo}
-              autoPlay
-              className={classes.video}
-              id="video"
-            />
-          </Grid>
-        </Paper>
+        <Box>
+          <video
+            playsInline
+            muted
+            ref={myVideo}
+            autoPlay
+            style={videoStyles}
+            id="video"
+          />
+        </Box>
       )}
-      <ReceiverOptions>
-        <Notifications />
-      </ReceiverOptions>
-    </Grid>
+    </Card>
   );
 };
 

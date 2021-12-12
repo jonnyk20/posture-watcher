@@ -208,3 +208,5 @@ export function drawKeypoints(
 export const wait = (milliseconds: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
+
+export const isDev = () => process.env.NODE_ENV !== "production";

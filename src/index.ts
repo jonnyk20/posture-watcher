@@ -35,12 +35,24 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("callEnded");
   });
 
-  socket.on("callUser", ({ userToCall, signalData, from, name }) => {
-    io.to(userToCall).emit("callUser", { signal: signalData, from, name });
+  socket.on("callUser", ({ userToCall, from }) => {
+    io.to(userToCall).emit("callUser", { from });
   });
 
-  socket.on("answerCall", (data) => {
-    io.to(data.to).emit("callAccepted", data.signal);
+  socket.on("answerCall", (to) => {
+    io.to(to).emit("callAccepted");
+  });
+
+  socket.on("requestStream", ({ userToCall, signalData, from }) => {
+    io.to(userToCall).emit("requestStream", { from, signalData });
+  });
+
+  socket.on("sendStream", ({ callerId, signalData, from }) => {
+    io.to(callerId).emit("streamSent", { signal: signalData, from });
+  });
+
+  socket.on("receiveStream", (data) => {
+    io.to(data.to).emit("streamReceived", data.signal);
   });
 });
 

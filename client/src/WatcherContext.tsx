@@ -17,6 +17,9 @@ type WatcherContextType = {
   outputRef: React.RefObject<HTMLCanvasElement>;
   canvasContainerRef: React.RefObject<HTMLDivElement>;
   setupWatcher: (stream: MediaStream) => void;
+  startDetection: () => void;
+  stopDetection: () => void;
+  isLoadingDetector: boolean;
 };
 
 export const defaultContextValue: WatcherContextType = {
@@ -24,6 +27,9 @@ export const defaultContextValue: WatcherContextType = {
   outputRef: React.createRef<HTMLCanvasElement>(),
   canvasContainerRef: React.createRef<HTMLDivElement>(),
   setupWatcher: () => {},
+  startDetection: () => {},
+  stopDetection: () => {},
+  isLoadingDetector: false,
 };
 
 export const WatcherContext = createContext(defaultContextValue);
@@ -42,56 +48,7 @@ export const WatcherProvider: React.FC = ({ children }): ReactElement => {
   const [detector, setDetector] = useState<posedetection.PoseDetector | null>(
     null
   );
-
-  const setupWatcher = async (stream: MediaStream) => {
-    const video = videoRef.current;
-    const canvas = outputRef.current;
-    const canvasContainer = canvasContainerRef.current;
-    const canvasContext = canvas?.getContext("2d");
-
-    if (!video || !canvas || !canvasContainer || !canvasContext) {
-      return;
-    }
-
-    video.srcObject = stream;
-    await new Promise((resolve) => {
-      video.onloadedmetadata = () => {
-        resolve(video);
-      };
-    });
-
-    video.play();
-
-    const videoWidth = video.videoWidth;
-    const videoHeight = video.videoHeight;
-
-    // Must set below two lines, otherwise video element doesn't show.
-    video.width = videoWidth;
-    video.height = videoHeight;
-
-    canvas.width = videoWidth;
-    canvas.height = videoHeight;
-    canvasContainer.style.width = `${videoWidth}px`;
-    canvasContainer.style.height = `${videoWidth}px`;
-
-    setVideoDimensions({
-      width: videoWidth,
-      height: videoHeight,
-    });
-
-    // Because the image from camera is mirrored, need to flip horizontally.
-    // canvasContext.translate(video.videoWidth, 0);
-    // canvasContext.scale(-1, 1);
-
-    const detector = await posedetection.createDetector(
-      posedetection.SupportedModels.MoveNet,
-      {
-        modelType: posedetection.movenet.modelType.SINGLEPOSE_THUNDER,
-      }
-    );
-
-    setDetector(detector);
-  };
+  const [isLoadingDetector, setIsLoadingDetector] = useState(false);
 
   useEffect(() => {
     const renderResult = async () => {
@@ -169,13 +126,72 @@ export const WatcherProvider: React.FC = ({ children }): ReactElement => {
       renderPrediction();
     } else {
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detector]);
+
+  const startDetection = async () => {
+    setIsLoadingDetector(true);
+    const detector = await posedetection.createDetector(
+      posedetection.SupportedModels.MoveNet,
+      {
+        modelType: posedetection.movenet.modelType.SINGLEPOSE_THUNDER,
+      }
+    );
+    setIsLoadingDetector(false);
+    setDetector(detector);
+  };
+
+  const stopDetection = () => {
+    detector?.dispose();
+    setDetector(null);
+  };
+
+  const setupWatcher = async (stream: MediaStream) => {
+    const video = videoRef.current;
+    const canvas = outputRef.current;
+    const canvasContainer = canvasContainerRef.current;
+    const canvasContext = canvas?.getContext("2d");
+
+    if (!video || !canvas || !canvasContainer || !canvasContext) {
+      return;
+    }
+    video.srcObject = stream;
+    await new Promise((resolve) => {
+      video.onloadedmetadata = () => {
+        resolve(video);
+      };
+    });
+
+    video.play();
+
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+
+    // Must set below two lines, otherwise video element doesn't show.
+    video.width = videoWidth;
+    video.height = videoHeight;
+
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+    // canvasContainer.style.width = `${videoWidth}px`;
+    // canvasContainer.style.height = `${videoHeight}px`;
+
+    setVideoDimensions({
+      width: videoWidth,
+      height: videoHeight,
+    });
+
+    startDetection();
+  };
 
   const contextValue: WatcherContextType = {
     videoRef,
     outputRef,
     canvasContainerRef,
     setupWatcher,
+    startDetection,
+    stopDetection,
+    isLoadingDetector,
   };
 
   return (

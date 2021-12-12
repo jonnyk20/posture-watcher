@@ -4,8 +4,6 @@ import { SxProps } from "@mui/system/styleFunctionSx/styleFunctionSx";
 
 import { CSSProperties, useRef } from "react";
 import { useWatcherContext } from "../WatcherContext";
-import Notifications from "./Notifications";
-import Options from "./Options";
 
 type ReceiverVideoProps = {};
 
@@ -39,9 +37,6 @@ const ReceiverVideo: React.FC<ReceiverVideoProps> = () => {
           </Box>
         </Box>
       </Box>
-      <Options>
-        <Notifications />
-      </Options>
     </Box>
   );
 };
