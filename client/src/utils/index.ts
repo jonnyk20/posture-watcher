@@ -113,22 +113,22 @@ const connectedPartNames: Array<[string, string]> = [
   ["leftHip", "rightHip"],
 ];
 export const partNames: string[] = [
-  "nose",
+  "nose", // 0
   "leftEye",
   "rightEye",
   "leftEar",
   "rightEar",
-  "leftShoulder",
+  "leftShoulder", // 5
   "rightShoulder",
   "leftElbow",
   "rightElbow",
   "leftWrist",
-  "rightWrist",
+  "rightWrist", // 10
   "leftHip",
   "rightHip",
   "leftKnee",
   "rightKnee",
-  "leftAnkle",
+  "leftAnkle", // 15
   "rightAnkle",
 ];
 
@@ -185,6 +185,44 @@ export function drawSkeleton(
 }
 
 /**
+ * Draws the main line used to track posture
+ */
+export function drawWatcherSegment(
+  keypoints: [FormattedKeypoint, FormattedKeypoint],
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  scale = 1
+) {
+  drawSegment(
+    toTuple(keypoints[0].position),
+    toTuple(keypoints[1].position),
+    color,
+    scale,
+    ctx
+  );
+}
+
+const LEFT_SHOULDER_INDEX = 5;
+const RIGHT_SHOULDER_INDEX = 6;
+const LEFT_EAR_INDEX = 3;
+const RIGHT_EAR_INDEX = 4;
+
+/**
+ * Get watcher keypoints (shoulder and ear) based on pose direction
+ */
+export const getWatcherKeypoints = (
+  keypoints: FormattedKeypoint[],
+  isRightFacingPose: boolean
+): [FormattedKeypoint, FormattedKeypoint] => {
+  const earIndex = isRightFacingPose ? RIGHT_EAR_INDEX : LEFT_EAR_INDEX;
+  const shoulderIndex = isRightFacingPose
+    ? RIGHT_SHOULDER_INDEX
+    : LEFT_SHOULDER_INDEX;
+
+  return [keypoints[earIndex], keypoints[shoulderIndex]];
+};
+
+/**
  * Draw pose keypoints onto a canvas
  */
 export function drawKeypoints(
@@ -210,3 +248,22 @@ export const wait = (milliseconds: number): Promise<void> => {
 };
 
 export const isDev = () => process.env.NODE_ENV !== "production";
+
+const NOSE_INDEX = 0;
+
+export const isRightFacingPose = (keypoints: FormattedKeypoint[]): boolean => {
+  let isRightFacingPose = false;
+
+  // Nose is farther right than shoulders
+  if (
+    keypoints[NOSE_INDEX].position.x >
+    keypoints[RIGHT_SHOULDER_INDEX].position.x
+  ) {
+    isRightFacingPose = true;
+  }
+
+  return isRightFacingPose;
+};
+
+export const getAngle = (a: FormattedKeypoint, b: FormattedKeypoint) =>
+  (Math.atan2(a.y - b.y, a.x - b.x) * 180) / Math.PI;
