@@ -21,10 +21,7 @@ import {
 import { DimensionsType } from "./constants/params";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { checkPosture } from "./redux/watcherSlice";
-import {
-  selectBaseAngle,
-  selectOffsetThreshold,
-} from "./redux/selectors/watcher";
+import { selectBaseAngle, selectSafeRange } from "./redux/selectors/watcher";
 
 type WatcherContextType = {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -34,6 +31,7 @@ type WatcherContextType = {
   startDetection: () => void;
   stopDetection: () => void;
   isLoadingDetector: boolean;
+  isDetecting: boolean;
 };
 
 export const defaultContextValue: WatcherContextType = {
@@ -44,6 +42,7 @@ export const defaultContextValue: WatcherContextType = {
   startDetection: () => {},
   stopDetection: () => {},
   isLoadingDetector: false,
+  isDetecting: false,
 };
 
 export const WatcherContext = createContext(defaultContextValue);
@@ -67,7 +66,7 @@ export const WatcherProvider: React.FC = ({ children }): ReactElement => {
   );
   const [isLoadingDetector, setIsLoadingDetector] = useState(false);
   const baseAngle = useAppSelector(selectBaseAngle);
-  const offsetThreshold = useAppSelector(selectOffsetThreshold);
+  const offsetThreshold = useAppSelector(selectSafeRange);
   const dispatch = useAppDispatch();
 
   const renderResult = useCallback(async () => {
@@ -130,7 +129,7 @@ export const WatcherProvider: React.FC = ({ children }): ReactElement => {
         const offset = Math.abs(angle - baseAngle);
         const color = offset > offsetThreshold ? "red" : "green";
 
-        dispatch(checkPosture(offset));
+        dispatch(checkPosture(angle));
 
         drawKeypoints(watcherKeypoints, 0.13, canvasContext, scale);
 
@@ -233,6 +232,7 @@ export const WatcherProvider: React.FC = ({ children }): ReactElement => {
     startDetection,
     stopDetection,
     isLoadingDetector,
+    isDetecting: !!detector,
   };
 
   return (

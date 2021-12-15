@@ -105,3 +105,8 @@ export const TUNABLE_FLAG_NAME_MAP = {
   WEBGL_RENDER_FLOAT32_CAPABLE: "enable float32",
   WEBGL_FLUSH_THRESHOLD: "GL flush wait time(ms)",
 };
+
+export const DEFAULT_BASE_ANGLE = 90;
+
+export const DEFAULT_OFFSET_THRESHOLD = 15;
+export const DEFAULT_SAFE_RANGE = DEFAULT_OFFSET_THRESHOLD * 2;
