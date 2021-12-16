@@ -10,7 +10,11 @@ import { io } from "socket.io-client";
 import Peer from "simple-peer";
 import { useLocation } from "react-router";
 import { useWatcherContext } from "./WatcherContext";
-import { VideoSizeKey, VIDEO_SIZE } from "./constants/params";
+import {
+  FRAMES_PER_SECOND,
+  VideoSizeKey,
+  VIDEO_SIZE,
+} from "./constants/params";
 import { isDev, isMobile } from "./utils";
 
 const socket = isDev()
@@ -69,7 +73,7 @@ export const SocketProvider: React.FC = ({ children }): ReactElement => {
   const [call, setCall] = useState(EMPTY_CALL);
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
-  const [targetFPS] = useState(5);
+  const [targetFPS] = useState(FRAMES_PER_SECOND);
   const [sizeOption] = useState<VideoSizeKey>("640 X 480");
   const [isConnecting, setIsConnecting] = useState(false);
   const [callerId, setCallerId] = useState("");

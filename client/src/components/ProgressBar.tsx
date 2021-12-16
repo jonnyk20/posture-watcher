@@ -34,7 +34,7 @@ const ProgressBar: React.FC<ProgressBarProps> = () => {
     color = "warning";
   }
 
-  if (isFailingCheck && score < 20) {
+  if ((isFailingCheck && score < 20) || score === 0) {
     color = "error";
   }
 
@@ -43,7 +43,7 @@ const ProgressBar: React.FC<ProgressBarProps> = () => {
       <Box sx={{ width: "100%", color }}>
         <LinearProgress variant="determinate" value={score} color={color} />
       </Box>
-      <Typography sx={{ ml: 1 }}>{lastReportedAngle}°</Typography>
+      <Typography sx={{ ml: 1 }}>{lastReportedAngle.toFixed()}°</Typography>
     </Card>
   );
 };

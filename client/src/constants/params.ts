@@ -110,3 +110,6 @@ export const DEFAULT_BASE_ANGLE = 90;
 
 export const DEFAULT_OFFSET_THRESHOLD = 15;
 export const DEFAULT_SAFE_RANGE = DEFAULT_OFFSET_THRESHOLD * 2;
+export const FRAMES_PER_SECOND = 5;
+
+export const MAX_VIDEO_WIDTH = 400;

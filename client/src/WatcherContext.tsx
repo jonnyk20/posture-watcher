@@ -18,7 +18,11 @@ import {
   getWatcherKeypoints,
   isRightFacingPose,
 } from "./utils";
-import { DimensionsType } from "./constants/params";
+import {
+  DimensionsType,
+  FRAMES_PER_SECOND,
+  MAX_VIDEO_WIDTH,
+} from "./constants/params";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { checkPosture } from "./redux/watcherSlice";
 import { selectBaseAngle, selectSafeRange } from "./redux/selectors/watcher";
@@ -48,6 +52,8 @@ export const defaultContextValue: WatcherContextType = {
 export const WatcherContext = createContext(defaultContextValue);
 
 WatcherContext.displayName = "Workflows.WatcherContext";
+
+const CHECK_INTERVAL_TIME = 1000 / FRAMES_PER_SECOND;
 
 export const WatcherProvider: React.FC = ({ children }): ReactElement => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -127,19 +133,17 @@ export const WatcherProvider: React.FC = ({ children }): ReactElement => {
         const angle = getAngle(watcherKeypoints[1], watcherKeypoints[0]);
 
         const offset = Math.abs(angle - baseAngle);
-        const color = offset > offsetThreshold ? "red" : "green";
+        const color = offset > offsetThreshold / 2 ? "red" : "green";
 
         dispatch(checkPosture(angle));
 
         drawKeypoints(watcherKeypoints, 0.13, canvasContext, scale);
 
-        drawWatcherSegment(watcherKeypoints, canvasContext, color);
+        drawWatcherSegment(watcherKeypoints, canvasContext, color, scale);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detector, offsetThreshold, baseAngle]);
-
-  const CHECK_INTERVAL_TIME = 1000;
 
   useEffect(() => {
     const currentTime = Date.now();
@@ -204,8 +208,12 @@ export const WatcherProvider: React.FC = ({ children }): ReactElement => {
 
     video.play();
 
-    const videoWidth = video.videoWidth;
-    const videoHeight = video.videoHeight;
+    const originalWidth = video.videoWidth;
+    const originalHeight = video.videoHeight;
+    const ratio = originalHeight / originalWidth;
+
+    const videoWidth = Math.min(originalWidth, MAX_VIDEO_WIDTH);
+    const videoHeight = videoWidth * ratio;
 
     // Must set below two lines, otherwise video element doesn't show.
     video.width = videoWidth;
@@ -213,8 +221,8 @@ export const WatcherProvider: React.FC = ({ children }): ReactElement => {
 
     canvas.width = videoWidth;
     canvas.height = videoHeight;
-    // canvasContainer.style.width = `${videoWidth}px`;
-    // canvasContainer.style.height = `${videoHeight}px`;
+    canvasContainer.style.width = `${videoWidth}px`;
+    canvasContainer.style.height = `${videoHeight}px`;
 
     setVideoDimensions({
       width: videoWidth,

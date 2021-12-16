@@ -58,11 +58,13 @@ const AngleIndicator: React.FC<AngleIndicatorProps> = () => {
     bottom: "calc(50% - 5px)",
     left: "calc(50% - 2px)",
     height: 102,
-    width: 4,
-    background: "#3f51b5",
+    width: 2,
+    // background: "#3f51b5",
+    backgroundColor: "primary.light",
+    opacity: 0.75,
     transform: `rotate(${baseAngle - DEFAULT_BASE_ANGLE}deg)`,
     transformOrigin: "bottom right",
-    borderRadius: "4px 4px 0 0",
+    borderRadius: "2px 2px 0 0",
   };
 
   const currentLineSx: SxProps<Theme> = {
@@ -71,8 +73,8 @@ const AngleIndicator: React.FC<AngleIndicatorProps> = () => {
     left: "calc(50% - 2px)",
     height: 102,
     width: 4,
-    background: "primary.dark",
-    transform: `rotate(${baseAngle - lastReportedAngle}deg)`,
+    backgroundColor: "primary.main",
+    transform: `rotate(${lastReportedAngle - 90}deg)`,
     transformOrigin: "bottom right",
     borderRadius: "4px 4px 0 0",
   };
