@@ -8,17 +8,25 @@ import DeviceInfo from "../components/DeviceInfo";
 import ReceiverControls from "../components/ReceiverControls";
 import ProgressBar from "../components/ProgressBar";
 import WatcherControls from "../components/WatcherControls";
+import { useWatcherContext } from "../WatcherContext";
 
 type ReceiverProps = {};
 
 const Receiver: React.FC<ReceiverProps> = () => {
   const sx: SxProps<Theme> = {};
+  const { isDetecting } = useWatcherContext();
 
   return (
     <ContentContainer sx={sx}>
       <ReceiverVideo />
-      <ProgressBar />
-      <WatcherControls />
+      <>
+        {isDetecting && (
+          <>
+            <ProgressBar />
+            <WatcherControls />
+          </>
+        )}
+      </>
       <ReceiverPrompt />
       <ReceiverControls />
       <DeviceInfo hideCopyButton />

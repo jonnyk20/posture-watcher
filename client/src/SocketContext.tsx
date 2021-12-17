@@ -151,7 +151,6 @@ export const SocketProvider: React.FC = ({ children }): ReactElement => {
 
   const answerCall = () => {
     setCallAccepted(true);
-
     socket.emit("answerCall", call.from);
     setCallerId(call.from);
   };

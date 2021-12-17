@@ -29,7 +29,7 @@ const ReceiverPrompt: React.FC<ReceiverPromptProps> = () => {
           2. Look for the "<b>Device ID</b>" on your mobile device{" "}
         </Typography>
         <Typography>
-          Enter that device ID into the field below and click "Connect"
+          3. Enter that device ID into the field below and click "Connect"
         </Typography>
       </Box>
     </Card>

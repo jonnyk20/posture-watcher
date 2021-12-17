@@ -75,34 +75,31 @@ const WatcherControls: React.FC<WatcherControlsProps> = () => {
         {buttonText}
       </Button> */}
       <Box sx={sectionSx}>
-        <Typography sx={{ mr: 1, width: 100 }}>Base Angle</Typography>
+        <Typography sx={{ mr: 1, width: 100 }}>Target Angle</Typography>
         <TextField
-          // label="Base Angle"
           value={baseAngle}
           type="number"
           size="small"
           inputProps={{ min: 45, max: 135 }}
           onChange={onChangeBaseAngle}
-          // InputLabelProps={{
-          //   shrink: true,
-          // }}
+          InputProps={{
+            endAdornment: "°",
+          }}
         />
       </Box>
       <Box sx={sectionSx}>
         <Box sx={{ mr: 1, width: 100, display: "flex" }}>
-          <Typography>Safe</Typography>
-          <Typography>Range</Typography>
+          <Typography>Safe Range</Typography>
         </Box>
         <TextField
-          // label="Base Angle"
           value={safeRange}
           type="number"
           size="small"
           inputProps={{ min: 15, max: 135 }}
           onChange={onChangeOffsetThreshold}
-          // InputLabelProps={{
-          //   shrink: true,
-          // }}
+          InputProps={{
+            endAdornment: "°",
+          }}
         />
       </Box>
       <AngleIndicator />
